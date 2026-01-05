@@ -4,6 +4,7 @@
 #include <LiquidCrystal_I2C.h>
 #include "Encoder.h"
 #include "Screen.h"
+#include "DebouncePin.h"
 
 using namespace canopener;
 
@@ -13,7 +14,7 @@ BridgeBus bus(serialBus,espBus);
 Device dev(bus);
 Encoder encoder(20,21);
 Screen screen;
-bool buttonState;
+DebouncePin button(10);
 
 void setup() {
     Serial.begin(115200);
@@ -30,9 +31,6 @@ void setup() {
     dev.insert(0x5f00,0).setType(Entry::UINT8); // encoder
     dev.insert(0x5f01,0).setType(Entry::BOOL); // button state
     dev.insert(0x5f02,0).setType(Entry::UINT8).set<uint8_t>(0); // button count
-
-    pinMode(10,INPUT_PULLUP);
-    buttonState=false;
 }
 
 void loop() {
@@ -53,11 +51,6 @@ void loop() {
     dev.at(0x5f00,0).set<uint8_t>(encoder.getValue());
     dev.at(0x5f01,0).set<bool>(digitalRead(10));
 
-    bool newButtonState=!digitalRead(10);
-    if (newButtonState && !buttonState) {
-        //Serial.printf("button...\n");
+    if (button.didChange() && !button.getValue())
         dev.at(0x5f02,0).set<uint8_t>(dev.at(0x5f02,0).get<uint8_t>()+1);
-    }
-
-    buttonState=newButtonState;
 }
