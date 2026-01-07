@@ -58,6 +58,30 @@ function App({motor}) {
 	);
 }
 
+function App2({motor}) {
+	let targetEntry=motor.entry(0x607A,0x00);
+
+	return (
+		<Menu title="Flatpak">
+			<Menu title="Start Queued Job">
+				<Menu title="Job #123"/>
+				<Menu title="Job #124"/>
+				<Menu title="Job #125"/>
+				<Menu title="Job #126"/>
+				<Menu title="Job #127"/>
+				<Menu title="Job #128"/>
+			</Menu>
+			<Menu title="Settings1"/>
+			<Menu title="Settings2"/>
+			<Menu title="Settings3"/>
+			<ObjectEditor dev={motor} index={0x607A} subIndex={0x00} 
+					name={"Motor"}
+					title={"Motor: "+targetEntry.get()} 
+					min={0} max={10000} step={100}/>
+		</Menu>
+	);
+}
+
 async function run() {
 	let bus;
 	if (global.canBus) {
@@ -72,8 +96,8 @@ async function run() {
 	}
 
 	let masterDevice=new MasterDevice({bus});
-	let motor=masterDevice.createRemoteDevice(5);
 	let uiDevice=masterDevice.createRemoteDevice(6);
+	let motor=masterDevice.createRemoteDevice(5);
 
 	await motor.awaitState("operational");
 
@@ -92,13 +116,15 @@ async function run() {
 	maxVel.set(16000);
 	targetPosition.set(0);
 	await motor.flush();
+	console.log("Motor initialized..");
 
 	await uiDevice.awaitState("operational");
 
-	let ui=createUiDevice(<App motor={motor}/>);
+	//let ui=createUiDevice(<App motor={motor}/>);
+	let ui=createUiDevice(<App2 motor={motor}/>);
 	await ui.setRemoteDevice(uiDevice);
 
-	console.log("Motor UI initialized...");
+	console.log("Motor UI initialized..");
 }
 
 run();

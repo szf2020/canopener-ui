@@ -15,6 +15,7 @@ Device dev(bus);
 Encoder encoder(20,21);
 Screen screen;
 DebouncePin button(10);
+bool prevConnected;
 
 void setup() {
     Serial.begin(115200);
@@ -31,18 +32,28 @@ void setup() {
     dev.insert(0x5f00,0).setType(Entry::UINT8); // encoder
     dev.insert(0x5f01,0).setType(Entry::BOOL); // button state
     dev.insert(0x5f02,0).setType(Entry::UINT8).set<uint8_t>(0); // button count
+    prevConnected=false;
 }
 
 void loop() {
     dev.loop();
 
     if (dev.getState()==Device::OPERATIONAL) {
+        prevConnected=true;
         for (int row=0; row<4; row++)
             for (int chunk=0; chunk<5; chunk++)
                 screen.setChunk(row,chunk,dev.at(0x7000+row,chunk+1).get<uint32_t>());
     }
 
     else {
+        if (prevConnected) {
+            for (int row=0; row<4; row++)
+                for (int chunk=0; chunk<5; chunk++)
+                    dev.at(0x7000+row,chunk+1).set<uint32_t>(0x20202020);
+
+            prevConnected=false;
+        }
+
         for (int row=0; row<4; row++)
             for (int chunk=0; chunk<5; chunk++)
                 screen.setChunk(row,chunk,0x202d2d20);

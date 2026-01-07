@@ -180,11 +180,27 @@ export default class UiDevice {
 
 		this.refreshPromise=new ResolvablePromise();
 		UiDevice.instance=this;
+
+		if (global.gc) {
+			let collected=global.gc();
+			//console.log("collected before: "+collected);
+		}
+
 		let unflatContent=this.reactiveTui.render();
 		let content=unflatContent.flat(Infinity);
 		//console.log(content);
 
+		if (global.gc) {
+			let collected=global.gc();
+			//console.log("collected mid: "+collected);
+		}
+
 		await this.setLines(content);
+
+		if (global.gc) {
+			let collected=global.gc();
+			//console.log("collected after: "+collected);
+		}
 	}
 
 	async run() {
